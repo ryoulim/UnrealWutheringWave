@@ -34,29 +34,29 @@ public:
 
 	/* PlayerPawn */
 protected:
-	/* ÃÖÃÊ Pawn ¼³Á¤ */
+	/* ìµœì´ˆ Pawn ì„¤ì • */
 	void InitPlayerPawn(int32 Index);
-	/* ÀÌ ÇÃ·¹ÀÌ¾î¸¦ ¸¸µé¾î¼­ ÀÌ ÆÄÆ¼ÀÎµ¦½º¿¡ ³Ö¾î¶ó */
+	/* ì´ ìºë¦­í„°ë¥¼ ìƒì„±í•˜ì—¬ ì´ í”Œë ˆì´ì–´ì»¨íŠ¸ë¡¤ëŸ¬ì— ë¶™ì—¬ë¼ */
 	void CreatePlayerPawn(int32 RoleID, int32 PartyIndex);
-	/* Ä³¸¯ÅÍ ½º¿Ò¿ë */
+	/* ìºë¦­í„° ì „í™˜ìš© */
 	void ChangePlayerPawn(int32 Index);
-	/* ÆÄÆ¼ Ä³¸¯ÅÍ¸¦ ³Ö¾îµĞ ÄÁÅ×ÀÌ³Ê */
+	/* íŒŒí‹° ìºë¦­í„°ë¥¼ ì €ì¥í•´ë‘˜ ë°°ì—´ */
 	UPROPERTY()
 	TArray<TObjectPtr<class AWWRoleBase>> CurrentParty;
-	/* ÇöÀç ¼±ÅÃÇÑ Ä³¸¯ÅÍÀÇ ÀÎµ¦½º */
+	/* í˜„ì¬ ì„ íƒëœ ìºë¦­í„°ì˜ ì¸ë±ìŠ¤ */
 	int32 CurrentPlayerPawnIndex{};
 
 	/* Input */
 protected:
-	// ¸ŞÀÎ ¸ÅÇÎ ÄÁÅØ½ºÆ®
+	// ê²Œì„ ì…ë ¥ ë§¤í•‘ ì»¨í…ìŠ¤íŠ¸
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|MappingContext")
 	TObjectPtr<class UInputMappingContext> GameMappingContext;
 
-	// ¸Ş´º ¹öÆ°
+	// ë©”ë‰´ í† ê¸€
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Menu")
 	TObjectPtr<class UInputAction> MenuToggleAction;
 
-	// ÀÌµ¿°ü·Ã 
+	// ì´ë™ ì…ë ¥ 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Move")
 	TObjectPtr<class UInputAction> NormalMoveAction;
 
@@ -79,7 +79,7 @@ protected:
 	void OnJumpActionCompleted();
 	void OnDashActionStarted();
 
-	// °ø°İ °ü·Ã
+	// ê³µê²© ì…ë ¥
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Attack")
 	TObjectPtr<class UInputAction> NormalAttackAction;
 
@@ -97,7 +97,7 @@ protected:
 	void OnEcoAttackActionStarted();
 	void OnUltimateAttackActionStarted();
 
-	// Ä³¸¯ÅÍ ¹Ù²Ù±â
+	// ìºë¦­í„° ì „í™˜í•˜ê¸°
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|ChangePlayerPawn")
 	TObjectPtr<class UInputAction> ChangePlayerPawnAction1;
 

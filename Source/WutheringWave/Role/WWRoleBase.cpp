@@ -4,6 +4,7 @@
 #include "WWRoleBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Net/UnrealNetwork.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -16,7 +17,7 @@ AWWRoleBase::AWWRoleBase()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	/* �⺻ �������� */
+	/* 기본 설정값들 */
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -34,21 +35,21 @@ AWWRoleBase::AWWRoleBase()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
-	/* ���̽� �ִ��� ������ ���� �Ž� */
+	/* 스켈레탈 메시를 숨기기 위한 설정 */
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -80.f), FRotator(0.f, -90.f, 0.f));
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 	GetMesh()->SetVisibility(false);
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 	
-	/* ���� �������� �Ž� */
+	/* 실제 렌더링될 메시 */
 	RenderMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RenderMesh"));
 	RenderMesh->SetupAttachment(GetMesh());
 	RenderMesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	RenderMesh->SetVisibility(true);
 	RenderMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
-	/* ī�޶� ���� */
+	/* 카메라 생성 */
 	if (!CameraBoom)
 	{
 		CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -135,13 +136,99 @@ void AWWRoleBase::NormalMove(const FInputActionValue& Value)
 
 void AWWRoleBase::Dash()
 {
+	// 멀티플레이어: 서버에서만 실행되도록 RPC 호출
+	if (HasAuthority())
+	{
+		// 서버에서 직접 실행
+		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+		{
+			AnimInstatnce->OnDashCall();
+		}
+	}
+	else
+	{
+		// 클라이언트는 서버에 RPC 전송
+		ServerDash();
+	}
+}
+
+void AWWRoleBase::NormalAttack()
+{
+	// 멀티플레이어: 클라이언트에서 서버로 RPC 전송
+	if (HasAuthority())
+	{
+		// 서버에서 직접 실행
+		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+		{
+			AnimInstatnce->OnNormalAttackCallCall();
+		}
+	}
+	else
+	{
+		ServerNormalAttack();
+	}
+}
+
+void AWWRoleBase::SpecialAttack()
+{
+	if (HasAuthority())
+	{
+		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+		{
+			AnimInstatnce->OnSpecialAttackCall();
+		}
+	}
+	else
+	{
+		ServerSpecialAttack();
+	}
+}
+
+void AWWRoleBase::EcoAttack()
+{
+	if (HasAuthority())
+	{
+		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+		{
+			AnimInstatnce->OnEcoAttackCall();
+		}
+	}
+	else
+	{
+		ServerEcoAttack();
+	}
+}
+
+void AWWRoleBase::UltimateAttack()
+{
+	if (HasAuthority())
+	{
+		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+		{
+			AnimInstatnce->OnUltimateAttackCall();
+		}
+	}
+	else
+	{
+		ServerUltimateAttack();
+	}
+}
+
+// Server RPC 구현
+void AWWRoleBase::ServerDash_Implementation()
+{
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
 		AnimInstatnce->OnDashCall();
 	}
 }
 
-void AWWRoleBase::NormalAttack()
+bool AWWRoleBase::ServerDash_Validate()
+{
+	return true;
+}
+
+void AWWRoleBase::ServerNormalAttack_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
@@ -149,7 +236,12 @@ void AWWRoleBase::NormalAttack()
 	}
 }
 
-void AWWRoleBase::SpecialAttack()
+bool AWWRoleBase::ServerNormalAttack_Validate()
+{
+	return true;
+}
+
+void AWWRoleBase::ServerSpecialAttack_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
@@ -157,7 +249,12 @@ void AWWRoleBase::SpecialAttack()
 	}
 }
 
-void AWWRoleBase::EcoAttack()
+bool AWWRoleBase::ServerSpecialAttack_Validate()
+{
+	return true;
+}
+
+void AWWRoleBase::ServerEcoAttack_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
@@ -165,7 +262,12 @@ void AWWRoleBase::EcoAttack()
 	}
 }
 
-void AWWRoleBase::UltimateAttack()
+bool AWWRoleBase::ServerEcoAttack_Validate()
+{
+	return true;
+}
+
+void AWWRoleBase::ServerUltimateAttack_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
@@ -173,7 +275,24 @@ void AWWRoleBase::UltimateAttack()
 	}
 }
 
+bool AWWRoleBase::ServerUltimateAttack_Validate()
+{
+	return true;
+}
+
 void AWWRoleBase::SetUIMode(bool bInMode)
 {
 	bIsUIMode = bInMode;
+}
+
+void AWWRoleBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// 멀티플레이어를 위한 Replication 설정
+	// Character는 기본적으로 위치, 회전, 애니메이션 등이 자동으로 Replicated됨
+	// 추가로 필요한 변수만 여기에 추가
+	
+	// UI 모드는 클라이언트에서만 사용하므로 Replication 불필요
+	// 하지만 다른 플레이어가 보는 상태가 필요하면 추가 가능
 }

@@ -21,7 +21,7 @@ public:
 private:
 	virtual void BeginPlay() override;
 
-	/* ÀÌ ¼ø¼­´ë·Î Ã¼ÀÎ·Îµù */
+	/* ì´ ë ˆë²¨ë¡œ ì§„ì…ì‹œ ì—ì…‹ ë¡œë“œ */
 private:
 	void LoadGlobalAssets();
 	void LoadPartyCharacter();

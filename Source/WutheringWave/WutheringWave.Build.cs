@@ -8,7 +8,7 @@ public class WutheringWave : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "Slate", "SlateCore", "Paper2D"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "Slate", "SlateCore", "Paper2D", "NetCore", "Sockets", "OnlineSubsystem", "OnlineSubsystemUtils"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

@@ -13,4 +13,8 @@ AWWMainLevelGameMode::AWWMainLevelGameMode()
 	}
 
 	DefaultPawnClass = AWWRoleBase::StaticClass();
+	
+	// 멀티플레이어 설정
+	bUseSeamlessTravel = true; // 원활한 레벨 전환
+	MaxPlayers = 4; // 최대 플레이어 수 설정
 }

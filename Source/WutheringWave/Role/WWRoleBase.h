@@ -14,16 +14,19 @@ class WUTHERINGWAVE_API AWWRoleBase : public ACharacter
 	
 public:
 	AWWRoleBase();
+	
+	// ë©€í‹°í”Œë ˆì´ì–´ë¥¼ ìœ„í•œ Replication ì„¤ì •
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/* Swap */
 public:
-	/* Áö±İ ÇÊµå·Î µîÀåÇß´Ù. */
+	/* í•„ë“œ ìºë¦­í„°ë¡œ ì „í™˜í–ˆë‹¤. */
 	virtual void OnField();
-	/* Áö±İ ÇÊµå¿¡¼­ ³ª¿Ô´Ù. */
+	/* í•„ë“œ ìºë¦­í„°ì—ì„œ ë‚˜ì™”ë‹¤. */
 	virtual void OffField();
-	/* Ä³¸¯ÅÍ ½º¿Ò½ÃÀÇ »óÅÂ¸¦ º¹»ç */
+	/* ë‹¤ë¥¸ ìºë¦­í„°ì˜ ìƒíƒœë¥¼ ë³µì‚¬ */
 	void CopyState(const ACharacter* Other);
-	/* ¿ùµå¿¡¼­ Ä³¸¯ÅÍ °¨Ãß±â */
+	/* ìºë¦­í„° í™œì„±í™” ìƒíƒœ ì„¤ì • */
 	void SetActive(bool bActive);
 
 	UFUNCTION(BlueprintCallable)
@@ -44,6 +47,23 @@ public:
 	void NormalMove(const FInputActionValue& Value);
 	void Dash();
 
+	// ë©€í‹°í”Œë ˆì´ì–´ë¥¼ ìœ„í•œ Server RPC
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerNormalAttack();
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSpecialAttack();
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerEcoAttack();
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerUltimateAttack();
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerDash();
+
+	// í´ë¼ì´ì–¸íŠ¸ì—ì„œ í˜¸ì¶œí•˜ëŠ” í•¨ìˆ˜ë“¤ (ì„œë²„ RPCë¡œ ì „ì†¡)
 	void NormalAttack();
 	void SpecialAttack();
 	void EcoAttack();

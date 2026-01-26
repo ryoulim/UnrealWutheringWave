@@ -41,27 +41,32 @@ void AWWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	UWWSaveDataSubsystem* SaveDataSubsystem = GetGameInstance()->GetSubsystem<UWWSaveDataSubsystem>();
-	SaveDataSubsystem->LoadAllData();
-	auto CharacterSaveGame = SaveDataSubsystem->GetCharacterSaveGame();
-
-	/* �÷��̾� ���� */
-	CurrentParty.SetNum(3);
-	int32 PartyIndex{};
-	for (auto& RoleIndex : CharacterSaveGame->PartyCharacter)
+	// 멀티플레이어: SaveGame 로드는 서버에서만 수행
+	// 클라이언트는 서버로부터 데이터를 받아야 함
+	if (HasAuthority())
 	{
-		CreatePlayerPawn(RoleIndex, PartyIndex++);
-	}
-	InitPlayerPawn(CharacterSaveGame->CurrentPartyIndex);
+		UWWSaveDataSubsystem* SaveDataSubsystem = GetGameInstance()->GetSubsystem<UWWSaveDataSubsystem>();
+		SaveDataSubsystem->LoadAllData();
+		auto CharacterSaveGame = SaveDataSubsystem->GetCharacterSaveGame();
 
-	/* Mapping Context */
+		/* 파티 생성 */
+		CurrentParty.SetNum(3);
+		int32 PartyIndex{};
+		for (auto& RoleIndex : CharacterSaveGame->PartyCharacter)
+		{
+			CreatePlayerPawn(RoleIndex, PartyIndex++);
+		}
+		InitPlayerPawn(CharacterSaveGame->CurrentPartyIndex);
+	}
+
+	/* Mapping Context - 모든 클라이언트에서 설정 */
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 	if (Subsystem && GameMappingContext)
 	{
 		Subsystem->AddMappingContext(GameMappingContext, 0);
 	}
 
-	/* Menu Widget */
+	/* Menu Widget - 모든 클라이언트에서 생성 */
 	if (MenuWidgetClass)
 	{
 		MenuWidget = CreateWidget<UWWMenuWidget>(this, MenuWidgetClass);
@@ -76,10 +81,10 @@ void AWWPlayerController::SetupInputComponent()
 
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 
-	// �޴� ��ư
+	// 메뉴 토글
 	EnhancedInputComponent->BindAction(MenuToggleAction, ETriggerEvent::Started, this, &AWWPlayerController::OpenMenu);
 
-	// �̵����� 
+	// 이동 입력 
 	EnhancedInputComponent->BindAction(NormalMoveAction, ETriggerEvent::Started, this, &AWWPlayerController::OnNormalMoveActionStarted);
 	EnhancedInputComponent->BindAction(NormalMoveAction, ETriggerEvent::Triggered, this, &AWWPlayerController::OnNormalMoveActionTriggered);
 	EnhancedInputComponent->BindAction(NormalLookAction, ETriggerEvent::Triggered, this, &AWWPlayerController::OnNormalLookActionTriggered);
@@ -87,13 +92,13 @@ void AWWPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AWWPlayerController::OnJumpActionCompleted);
 	EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AWWPlayerController::OnDashActionStarted);
 
-	// ���� ����
+	// 공격 입력
 	EnhancedInputComponent->BindAction(NormalAttackAction, ETriggerEvent::Started, this, &AWWPlayerController::OnNormalAttackActionStarted);
 	EnhancedInputComponent->BindAction(SpecialAttackAction, ETriggerEvent::Started, this, &AWWPlayerController::OnSpecialAttackActionStarted);
 	EnhancedInputComponent->BindAction(EcoAttackAction, ETriggerEvent::Started, this, &AWWPlayerController::OnEcoAttackActionStarted);
 	EnhancedInputComponent->BindAction(UltimateAttackAction, ETriggerEvent::Started, this, &AWWPlayerController::OnUltimateAttackActionStarted);
 
-	// ĳ���� �ٲٱ�
+	// 캐릭터 전환
 	EnhancedInputComponent->BindAction(ChangePlayerPawnAction1, ETriggerEvent::Started, this, &AWWPlayerController::OnChangePlayerPawnAction1Started);
 	EnhancedInputComponent->BindAction(ChangePlayerPawnAction2, ETriggerEvent::Started, this, &AWWPlayerController::OnChangePlayerPawnAction2Started);
 	EnhancedInputComponent->BindAction(ChangePlayerPawnAction3, ETriggerEvent::Started, this, &AWWPlayerController::OnChangePlayerPawnAction3Started);
@@ -123,6 +128,12 @@ void AWWPlayerController::InitPlayerPawn(int32 Index)
 
 void AWWPlayerController::CreatePlayerPawn(int32 RoleID, int32 PartyIndex)
 {
+	// 멀티플레이어: 서버에서만 Pawn 생성
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	if (!CurrentParty.IsValidIndex(PartyIndex) || 
 		RoleID == -1)
 		return;
@@ -135,6 +146,7 @@ void AWWPlayerController::CreatePlayerPawn(int32 RoleID, int32 PartyIndex)
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride =
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Owner = this; // PlayerController를 Owner로 설정
 
 	CurrentParty[PartyIndex] = GetWorld()->SpawnActor<AWWRoleBase>(RoleAssetData->RoleClass, FTransform(FVector(0.f,0.f,-10000.f)), SpawnParams);
 	check(CurrentParty[PartyIndex]);
