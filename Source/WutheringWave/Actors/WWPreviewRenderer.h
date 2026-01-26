@@ -28,9 +28,9 @@ public:
 	void SetPreviewRole(AActor* InActor);
 	void CreateRenderTarget();
 	class UTextureRenderTarget2D* GetRenderTarget() const;
+	void Capture();
 
 protected:
-	void Capture();
 
 	// === Components ===
 protected:

@@ -11,6 +11,7 @@
 #include "Animation/WidgetAnimation.h"
 #include "../Common/WWWindowBaseWidget.h"
 #include "../FunctionWindow/WWFunctionWindowWidget.h"
+#include "SubSystem/WWRoledevModelSubsystem.h"
 
 void UWWMenuWidget::NativeOnInitialized()
 {
@@ -53,6 +54,14 @@ void UWWMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
     for (auto It = WindowMap.CreateIterator(); It; ++It)
     {
         FUIWindowEntry& Entry = It.Value();
+
+        // 위젯이 파괴되었거나 유효하지 않은 경우 Entry 제거
+        if (Entry.Widget && !IsValid(Entry.Widget))
+        {
+            Entry.Widget = nullptr;
+            It.RemoveCurrent();
+            continue;
+        }
 
         if (!Entry.bActive && Entry.Widget)
         {
@@ -109,6 +118,18 @@ void UWWMenuWidget::OpenMenu()
 
 void UWWMenuWidget::CloseMenu()
 {
+    // 메뉴를 닫을 때 프리뷰 모델 정리
+    if (auto RoledevModelSubsystem = GetGameInstance()->GetSubsystem<UWWRoledevModelSubsystem>())
+    {
+        RoledevModelSubsystem->ClosePreview();
+    }
+
+    // 현재 활성화된 창 숨기기
+    if (CurretnWindowID != 0)
+    {
+        HideWindow(CurretnWindowID);
+    }
+
     if (IWWMenuInterface* PlayerController = Cast<IWWMenuInterface>(GetOwningPlayer()))
     {
         PlayerController->CloseMenu();
@@ -120,15 +141,15 @@ void UWWMenuWidget::CloseMenu()
 
 void UWWMenuWidget::ChangeWindow(int32 InTargetWindow)
 {
-    bIsWindowLoadEnd = true;
     bFadeOutAnimEnd = false;
 
     if (0 != InTargetWindow)
     {
-        //������ �����ϰ� �ε��ϴ� ���� ����� �ű�°� ������?
+        // 위젯을 생성하고 로드하는 과정에서 문제가 생길 수 있으니 주의
         FUIWindowEntry& Entry = WindowMap.FindOrAdd(InTargetWindow);
 
-        if (!Entry.Widget)
+        // 위젯이 없거나 파괴된 경우 재생성
+        if (!Entry.Widget || !IsValid(Entry.Widget))
         {
             auto Type = WindowTypes.Find(InTargetWindow);
             if (!Type)
@@ -158,6 +179,16 @@ void UWWMenuWidget::ChangeWindow(int32 InTargetWindow)
                 }
             }
         }
+        else
+        {
+            // 이미 위젯이 존재하고 유효한 경우, 로드 완료 상태로 간주
+            bIsWindowLoadEnd = true;
+        }
+    }
+    else
+    {
+        // FunctionWindow로 전환하는 경우
+        bIsWindowLoadEnd = true;
     }
 
     TargetWindowID = InTargetWindow;
@@ -182,7 +213,10 @@ void UWWMenuWidget::ShowWindow(int32 WindowType)
 {
     if (0 == WindowType)
     {
-        FunctionWindow->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        if (FunctionWindow)
+        {
+            FunctionWindow->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        }
         return;
     }
 
@@ -192,16 +226,23 @@ void UWWMenuWidget::ShowWindow(int32 WindowType)
         return;
     }
 
-    Entry->Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-    Entry->Widget->SetKeyboardFocus();
-    Entry->bActive = true;
+    // 위젯이 유효한지 확인하고 표시
+    if (IsValid(Entry->Widget))
+    {
+        Entry->Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        Entry->Widget->SetKeyboardFocus();
+        Entry->bActive = true;
+    }
 }
     
 void UWWMenuWidget::HideWindow(int32 WindowType)
 {
     if (0 == WindowType)
     {
-        FunctionWindow->SetVisibility(ESlateVisibility::Collapsed);
+        if (FunctionWindow)
+        {
+            FunctionWindow->SetVisibility(ESlateVisibility::Collapsed);
+        }
         return;
     }
 

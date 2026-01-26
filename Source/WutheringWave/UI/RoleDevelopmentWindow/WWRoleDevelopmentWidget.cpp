@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WWRoleDevelopmentWidget.h"
@@ -121,12 +121,27 @@ void UWWRoleDevelopmentWidget::UpdateWindow()
 		int32 RoleId = SaveDataSubSystem->GetCharacterSaveGame()->GetSelectedCharatcterID();
 		RoledevModelSubsystem->SetPreviewRole(RoleId);
 
-		UMaterialInstanceDynamic* MID =
-			CharacterPreview->GetDynamicMaterial();
+		// AnimInstance가 준비될 때까지 약간의 시간이 필요할 수 있으므로
+		// 다음 프레임에 애니메이션을 재시작하도록 함
+		GetWorld()->GetTimerManager().SetTimerForNextTick([this, RoledevModelSubsystem, RoleId]()
+		{
+			if (RoledevModelSubsystem)
+			{
+				// 애니메이션을 확실히 재시작
+				RoledevModelSubsystem->SetPreviewRole(RoleId);
+			}
+		});
 
-		MID->SetTextureParameterValue(
-			TEXT("Texture"),
-			RoledevModelSubsystem->GetRenderTarget());
+		// RenderTarget이 유효한지 확인
+		UTextureRenderTarget2D* RenderTarget = RoledevModelSubsystem->GetRenderTarget();
+		if (RenderTarget && CharacterPreview)
+		{
+			UMaterialInstanceDynamic* MID = CharacterPreview->GetDynamicMaterial();
+			if (MID)
+			{
+				MID->SetTextureParameterValue(TEXT("Texture"), RenderTarget);
+			}
+		}
 	}
 }
 
@@ -168,5 +183,16 @@ void UWWRoleDevelopmentWidget::OnRoleButtonClicked(int32 ButtonID)
 
 		/* 프리뷰 업데이트 */
 		RoledevModelSubsystem->SetPreviewRole(ButtonID);
+
+		// RenderTarget 업데이트
+		UTextureRenderTarget2D* RenderTarget = RoledevModelSubsystem->GetRenderTarget();
+		if (RenderTarget && CharacterPreview)
+		{
+			UMaterialInstanceDynamic* MID = CharacterPreview->GetDynamicMaterial();
+			if (MID)
+			{
+				MID->SetTextureParameterValue(TEXT("Texture"), RenderTarget);
+			}
+		}
 	}));
 }

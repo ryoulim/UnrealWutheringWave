@@ -23,7 +23,7 @@ AWWPreviewRenderer::AWWPreviewRenderer()
 	SceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCapture"));
 	SceneCapture->SetupAttachment(Camera);
 
-	// === SceneCapture �⺻ ���� ===
+	// === SceneCapture 기본 설정 ===
 	SceneCapture->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 	SceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
 	SceneCapture->bCaptureEveryFrame = false;
@@ -42,13 +42,23 @@ void AWWPreviewRenderer::Tick(float InTimeDelta)
 
 void AWWPreviewRenderer::SetPreviewRole(AActor* InActor)
 {
-	if (SceneCapture)
+	if (!SceneCapture)
 	{
-		SceneCapture->ShowOnlyActors.Reset();
-		SceneCapture->ShowOnlyActors.Add(this);
-		SceneCapture->ShowOnlyActors.Add(InActor);
-		CapturedRole = InActor;
+		return;
 	}
+
+	if (!InActor || !IsValid(InActor))
+	{
+		return;
+	}
+
+	SceneCapture->ShowOnlyActors.Reset();
+	SceneCapture->ShowOnlyActors.Add(this);
+	SceneCapture->ShowOnlyActors.Add(InActor);
+	CapturedRole = InActor;
+
+	// Actor 설정 후 즉시 캡쳐 시도
+	// 하지만 애니메이션이 준비되지 않았을 수 있으므로 다음 프레임에도 캡쳐됨 (Tick에서)
 }
 
 void AWWPreviewRenderer::CreateRenderTarget()
@@ -71,13 +81,21 @@ UTextureRenderTarget2D* AWWPreviewRenderer::GetRenderTarget() const
 
 void AWWPreviewRenderer::Capture()
 {
-	if (SceneCapture)
+	if (!SceneCapture || !SceneCapture->TextureTarget)
 	{
-		UKismetRenderingLibrary::ClearRenderTarget2D(
-			this,
-			SceneCapture->TextureTarget,
-			FLinearColor(0, 0, 0, 0));
-
-		SceneCapture->CaptureScene();
+		return;
 	}
+
+	// CapturedRole이 유효한지 확인
+	if (!CapturedRole || !IsValid(CapturedRole))
+	{
+		return;
+	}
+
+	UKismetRenderingLibrary::ClearRenderTarget2D(
+		this,
+		SceneCapture->TextureTarget,
+		FLinearColor(0, 0, 0, 0));
+
+	SceneCapture->CaptureScene();
 }
