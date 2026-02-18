@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -25,6 +25,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	/** 클라이언트에서 복제된 Pawn이 설정될 때 뷰 타깃을 맞춰 검은 화면 방지 */
+	virtual void OnRep_Pawn() override;
 
 	/* InputStateCheck */
 public:

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -38,7 +38,7 @@ public:
 protected:
 	class AWWRoleDevActor* CreatePreviewRole(int32 RoleID);
 
-	/* æ◊≈ÕµÈ */
+	/* Ïï°ÌÑ∞Îì§ */
 protected :
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AWWPreviewRenderer> PreviewActorClass;
@@ -49,7 +49,7 @@ protected :
 	UPROPERTY()
 	TObjectPtr<class AWWRoleDevActor> CurrentActor = { nullptr };
 
-	/* ∑ª¥ı∑Ø */
+	/* Î†åÎçîÎü¨ */
 	UPROPERTY()
 	TObjectPtr<class AWWPreviewRenderer> PreviewRenderer = { nullptr };
 };

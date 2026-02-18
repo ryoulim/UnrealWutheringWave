@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WWRoleDevActor.h"
@@ -30,7 +30,7 @@ void AWWRoleDevActor::SetPose(EWWUIAnimName InPoseName)
 		AnimInstance->SetTargetAnim(InPoseName);
 	}
 
-	/* ¿©±â¼­ ÇÁ·ÓÀ» Æ÷Áö¼Ç ¹Ù²ãÁà¾ßÇÔ */
+	/* ì—¬ê¸°ì„œ í”„ë¡­ì„ í¬ì§€ì…˜ ë°”ê¿”ì¤˜ì•¼í•¨ */
 	for (int32 i = 0; i < PropMeshs.Num(); ++i)
 	{
 		if (UWWRoleDevAnimInstance* AnimInstance = Cast<UWWRoleDevAnimInstance>(PropMeshs[i]->GetAnimInstance()))
@@ -52,7 +52,7 @@ void AWWRoleDevActor::ResetAnimation()
 		AnimInstance->SetReStartAnim(true);
 	}
 
-	/* ¿©±â¼­ ÇÁ·ÓÀ» Æ÷Áö¼Ç ¹Ù²ãÁà¾ßÇÔ */
+	/* ì—¬ê¸°ì„œ í”„ë¡­ì„ í¬ì§€ì…˜ ë°”ê¿”ì¤˜ì•¼í•¨ */
 	for (int32 i = 0; i < PropMeshs.Num(); ++i)
 	{
 		if (UWWRoleDevAnimInstance* AnimInstance = Cast<UWWRoleDevAnimInstance>(PropMeshs[i]->GetAnimInstance()))
@@ -64,10 +64,10 @@ void AWWRoleDevActor::ResetAnimation()
 
 void AWWRoleDevActor::CreateProps()
 {
-	/* ¿©±â¼­ ÇÁ·Ó »ı¼º ÇÊ¿äÇÔ */
+	/* ì—¬ê¸°ì„œ í”„ë¡­ ìƒì„± í•„ìš”í•¨ */
 	if (DataAsset)
 	{
-		/* Ä³¸¯ÅÍ¸Å½¬ ¾Ö´Ô¼Â ³Ö¾îÁÖ±â*/
+		/* ìºë¦­í„°ë§¤ì‰¬ ì• ë‹˜ì…‹ ë„£ì–´ì£¼ê¸°*/
 		if (UWWRoleDevAnimInstance* AnimInstance = Cast<UWWRoleDevAnimInstance>(CharacterMesh->GetAnimInstance()))
 		{
 			AnimInstance->ReadyAnimSet(DataAsset->AnimSets);
@@ -89,14 +89,14 @@ void AWWRoleDevActor::CreateProps()
 			// 4. Register
 			NewProp->RegisterComponent();
 
-			// 5. AnimInstanceClass ÁöÁ¤ (ÀÌ ½ÃÁ¡ Áß¿ä)
+			// 5. AnimInstanceClass ì§€ì • (ì´ ì‹œì  ì¤‘ìš”)
 			NewProp->SetAnimInstanceClass(PreviewAnimInstance);
 			if (UWWRoleDevAnimInstance* AnimInstance = Cast<UWWRoleDevAnimInstance>(NewProp->GetAnimInstance()))
 			{
 				AnimInstance->ReadyAnimSet(Prop->AnimSets);
 			}
 
-			// 6. ±âÅ¸ ¼³Á¤
+			// 6. ê¸°íƒ€ ì„¤ì •
 			NewProp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			NewProp->SetSimulatePhysics(false);
 			NewProp->SetLightingChannels(false, true, false);

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "WWSaveDataSubsystem.h"
 
@@ -28,7 +28,7 @@ void UWWSaveDataSubsystem::LoadAllData()
 	InventorySaveGame = UWWSaveGameBase::LoadData<UWWWWInventoryDataSaveGame>(TEXT("InventoryData"), 0, GameInstance);
 	WeaponSaveGame = UWWSaveGameBase::LoadData<UWWWeaponDevelopmentSaveGame>(TEXT("WeaponData"), 0, GameInstance);
 
-	/* ÃÖÃÊ »ý¼º */
+	/* ìµœì´ˆ ìƒì„± */
 	if (CharacterSaveGame->CharacterMap.IsEmpty())
 	{
 		CharacterSaveGame->AddNewCharacter(5, WeaponSaveGame);

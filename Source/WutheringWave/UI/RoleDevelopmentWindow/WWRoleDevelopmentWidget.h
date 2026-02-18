@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -29,18 +29,18 @@ public:
 
 	/* BindWidget */
 protected:
-	/* Ä³¸¯ÅÍ ¹Ì¸®º¸±â */
+	/* ìºë¦­í„° ë¯¸ë¦¬ë³´ê¸° */
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<class UImage> CharacterPreview;
 
-	/* Ä³¸¯ÅÍ °ü·Ã */
+	/* ìºë¦­í„° ê´€ë ¨ */
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<class UWWRoleSlideWidget> RoleSlideWidget;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<class UWWRoleStatWidget> RoleStatWidget;
 
-	/* ¹«±â °ü·Ã*/
+	/* ë¬´ê¸° ê´€ë ¨*/
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<class UWWWeaponStatWidget> WeaponStatWidget;
 

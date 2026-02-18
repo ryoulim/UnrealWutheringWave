@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WWLoadingLevelGameMode.h"
@@ -26,7 +26,7 @@ void AWWLoadingLevelGameMode::BeginPlay()
 
 void AWWLoadingLevelGameMode::LoadGlobalAssets()
 {
-	/* �۷ι� ������ ���� �ε� */
+	/* 글로벌 데이터 에셋 로드 */
 	UAssetManager::Get().StartInitialLoading();
 
 	StreamableHandle = UAssetManager::Get().LoadPrimaryAssets({
@@ -61,7 +61,7 @@ void AWWLoadingLevelGameMode::LoadGlobalAssets()
 
 void AWWLoadingLevelGameMode::LoadPartyCharacter()
 {
-	/* ��Ƽ�� ����ִ� ĳ���͵� �Ž��� �⺻ �ִϸ��̼� �ε� */
+	/* 파티에 들어있는 캐릭터들 매쉬와 기본 애니메이션 로드 */
 	auto SaveDataSubsystem = GetGameInstance()->GetSubsystem<UWWSaveDataSubsystem>();
 	SaveDataSubsystem->LoadAllData();
 
@@ -80,10 +80,14 @@ void AWWLoadingLevelGameMode::LoadPartyCharacter()
 
 void AWWLoadingLevelGameMode::OnLoadEnd()
 {
-    UGameplayStatics::OpenLevel(
-        this,
-        FName("MainLevel"),
-        true,
-        TEXT("Listen")
-    );
+	/* 서버에서만 레벨 이동. 클라이언트는 서버가 이동할 때 함께 이동하므로 여기서 OpenLevel 호출하지 않음 */
+	if (GetWorld() && GetWorld()->GetNetMode() != NM_Client)
+	{
+		UGameplayStatics::OpenLevel(
+			this,
+			FName("MainLevel"),
+			true,
+			TEXT("Listen")
+		);
+	}
 }

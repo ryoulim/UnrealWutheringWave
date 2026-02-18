@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WWPlayerController.h"
@@ -37,6 +37,16 @@ AWWPlayerController::AWWPlayerController()
 	}
 }
 
+void AWWPlayerController::OnRep_Pawn()
+{
+	Super::OnRep_Pawn();
+	// 클라이언트에서 Pawn 복제 직후 뷰 타깃 설정 (Add Another Client 검은 화면 방지)
+	if (GetPawn() && IsLocalController())
+	{
+		SetViewTarget(GetPawn());
+	}
+}
+
 void AWWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -72,6 +82,12 @@ void AWWPlayerController::BeginPlay()
 		MenuWidget = CreateWidget<UWWMenuWidget>(this, MenuWidgetClass);
 		MenuWidget->AddToViewport();
 		MenuWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	// 클라이언트: 이미 Pawn이 있으면 뷰 타깃 설정 (레벨 진입 직후 검은 화면 방지)
+	if (IsLocalController() && GetPawn())
+	{
+		SetViewTarget(GetPawn());
 	}
 }
 

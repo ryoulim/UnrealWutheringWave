@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -15,15 +15,15 @@ class WUTHERINGWAVE_API AWWRoleDevActor : public AActor
 public:	
 	AWWRoleDevActor();
 
-	/* ±â´ÉÇÔ¼öµé */
+	/* ê¸°ëŠ¥í•¨ìˆ˜ë“¤ */
 public:
-	/* Æ÷Áö¼Ç ¹Ù²Ù±â */
+	/* í¬ì§€ì…˜ ë°”ê¾¸ê¸° */
 	void SetPose(EWWUIAnimName InPoseName);
-	/* µ¥ÀÌÅÍ ¿¡¼Â ³Ö±â */
+	/* ë°ì´í„° ì—ì…‹ ë„£ê¸° */
 	void SetDataAsset(const class UWWRoleDataAsset* InDataAsset);
-	/* ¾Ö´Ï¸ŞÀÌ¼Ç ÃÊ±âÈ­ */
+	/* ì• ë‹ˆë©”ì´ì…˜ ì´ˆê¸°í™” */
 	void ResetAnimation();
-	/* Prop »ı¼º */
+	/* Prop ìƒì„± */
 	void CreateProps();
 
 	/* Mesh */

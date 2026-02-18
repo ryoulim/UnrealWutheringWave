@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WWRoleBase.h"
@@ -16,6 +16,10 @@ AWWRoleBase::AWWRoleBase()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	/* 멀티플레이어: 서버에서 스폰된 Pawn이 클라이언트에 복제되도록 */
+	bReplicates = true;
+	SetReplicateMovement(true);
 
 	/* 기본 설정값들 */
 	bUseControllerRotationPitch = false;

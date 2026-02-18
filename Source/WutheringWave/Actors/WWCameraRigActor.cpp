@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actors/WWCameraRigActor.h"
@@ -13,7 +13,7 @@ AWWCameraRigActor::AWWCameraRigActor()
 	bFindCameraComponentWhenViewTarget = true;
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-	/* Ä«¸Ş¶ó »ı¼º */
+	/* ì¹´ë©”ë¼ ìƒì„± */
 	if (!CameraBoom)
 	{
 		CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
