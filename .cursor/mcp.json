@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "unrealMCP": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "C:\\UnrealProject\\WutheringWave\\Plugins\\unreal-mcp-main\\Python",
+        "run",
+        "unreal_mcp_server.py"
+      ]
+    }
+  }
+}
