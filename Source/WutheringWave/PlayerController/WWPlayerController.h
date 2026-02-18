@@ -1,9 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "TimerManager.h"
 #include "InputActionValue.h"
 #include "Interface/WWMenuInterface.h"
 #include "Interface/WWInputStateCheckInterface.h"
@@ -27,6 +28,8 @@ protected:
 	virtual void SetupInputComponent() override;
 	/** 클라이언트에서 복제된 Pawn이 설정될 때 뷰 타깃을 맞춰 검은 화면 방지 */
 	virtual void OnRep_Pawn() override;
+	/** Add Another Client 시 뷰 타깃이 늦게 붙을 수 있어 지연 후 한 번 더 설정 */
+	void EnsureClientViewTarget();
 
 	/* InputStateCheck */
 public:
@@ -42,6 +45,8 @@ protected:
 	void CreatePlayerPawn(int32 RoleID, int32 PartyIndex);
 	/* 캐릭터 전환용 */
 	void ChangePlayerPawn(int32 Index);
+	/** 서버는 CurrentParty[Index], 클라이언트는 GetPawn() 반환 */
+	class AWWRoleBase* GetControlledRole() const;
 	/* 파티 캐릭터를 저장해둘 배열 */
 	UPROPERTY()
 	TArray<TObjectPtr<class AWWRoleBase>> CurrentParty;
@@ -99,6 +104,10 @@ protected:
 	void OnEcoAttackActionStarted();
 	void OnUltimateAttackActionStarted();
 
+	/** 멀티플레이어: 클라이언트가 호출하면 서버에서 실제 파티 전환 수행 */
+	UFUNCTION(Server, Reliable)
+	void ServerChangePartyIndex(int32 Index);
+
 	// 캐릭터 전환하기
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|ChangePlayerPawn")
 	TObjectPtr<class UInputAction> ChangePlayerPawnAction1;
@@ -120,6 +129,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)
 	TObjectPtr<class UWWMenuWidget> MenuWidget;
+
+	FTimerHandle ClientViewTargetTimerHandle;
 
 	virtual void OpenMenu() override;
 	virtual void CloseMenu() override;

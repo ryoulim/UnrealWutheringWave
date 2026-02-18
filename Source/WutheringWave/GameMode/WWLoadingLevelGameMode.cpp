@@ -1,8 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WWLoadingLevelGameMode.h"
 #include "Kismet/GameplayStatics.h"
+#include "Role/WWRoleBase.h"
 
 #include "Headers/WWEnums.h"
 #include "GameData/DataAsset/WWElementDataAsset.h"
@@ -16,17 +17,23 @@
 
 AWWLoadingLevelGameMode::AWWLoadingLevelGameMode()
 {
+	// LoadingLevel에 머무는 클라이언트도 Pawn/카메라를 갖도록 (검은 화면 방지)
+	DefaultPawnClass = AWWRoleBase::StaticClass();
 }
 
 void AWWLoadingLevelGameMode::BeginPlay()
 {
-
+	// 멀티플레이어: 로딩/세이브/레벨 이동은 서버에서만. 클라이언트는 대기 후 서버와 함께 MainLevel로 이동
+	if (GetWorld() && GetWorld()->GetNetMode() == NM_Client)
+	{
+		return;
+	}
 	LoadGlobalAssets();
 }
 
 void AWWLoadingLevelGameMode::LoadGlobalAssets()
 {
-	/* 글로벌 데이터 에셋 로드 */
+	/* ??로벌 ????????? ?????? 로드 */
 	UAssetManager::Get().StartInitialLoading();
 
 	StreamableHandle = UAssetManager::Get().LoadPrimaryAssets({
@@ -61,7 +68,7 @@ void AWWLoadingLevelGameMode::LoadGlobalAssets()
 
 void AWWLoadingLevelGameMode::LoadPartyCharacter()
 {
-	/* 파티에 들어있는 캐릭터들 매쉬와 기본 애니메이션 로드 */
+	/* ????????? ???????????? 캐릭?????? 매쉬??? 기본 ??????메이??? 로드 */
 	auto SaveDataSubsystem = GetGameInstance()->GetSubsystem<UWWSaveDataSubsystem>();
 	SaveDataSubsystem->LoadAllData();
 
@@ -80,7 +87,7 @@ void AWWLoadingLevelGameMode::LoadPartyCharacter()
 
 void AWWLoadingLevelGameMode::OnLoadEnd()
 {
-	/* 서버에서만 레벨 이동. 클라이언트는 서버가 이동할 때 함께 이동하므로 여기서 OpenLevel 호출하지 않음 */
+	/* ???버에????? ????? ??????. ?????????????????? ???버??? ????????? ??? ????? ????????????? ???기서 OpenLevel ???출하?? ?????? */
 	if (GetWorld() && GetWorld()->GetNetMode() != NM_Client)
 	{
 		UGameplayStatics::OpenLevel(

@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WWPlayerController.h"
@@ -40,8 +40,17 @@ AWWPlayerController::AWWPlayerController()
 void AWWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
-	// 클라이언트에서 Pawn 복제 직후 뷰 타깃 설정 (Add Another Client 검은 화면 방지)
+	UE_LOG(LogWWPlayerController, Log, TEXT("OnRep_Pawn: IsLocal=%d Pawn=%s"), IsLocalController(), GetPawn() ? *GetPawn()->GetName() : TEXT("null"));
 	if (GetPawn() && IsLocalController())
+	{
+		SetViewTarget(GetPawn());
+	}
+}
+
+void AWWPlayerController::EnsureClientViewTarget()
+{
+	UE_LOG(LogWWPlayerController, Log, TEXT("EnsureClientViewTarget: IsLocal=%d Pawn=%s ViewTarget=%s"), IsLocalController(), GetPawn() ? *GetPawn()->GetName() : TEXT("null"), GetViewTarget() ? *GetViewTarget()->GetName() : TEXT("null"));
+	if (IsLocalController() && GetPawn() && GetViewTarget() != GetPawn())
 	{
 		SetViewTarget(GetPawn());
 	}
@@ -50,7 +59,8 @@ void AWWPlayerController::OnRep_Pawn()
 void AWWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UE_LOG(LogWWPlayerController, Log, TEXT("BeginPlay: HasAuthority=%d IsLocal=%d"), HasAuthority(), IsLocalController());
+
 	// 멀티플레이어: SaveGame 로드는 서버에서만 수행
 	// 클라이언트는 서버로부터 데이터를 받아야 함
 	if (HasAuthority())
@@ -84,10 +94,23 @@ void AWWPlayerController::BeginPlay()
 		MenuWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
 
-	// 클라이언트: 이미 Pawn이 있으면 뷰 타깃 설정 (레벨 진입 직후 검은 화면 방지)
-	if (IsLocalController() && GetPawn())
+	if (IsLocalController())
 	{
-		SetViewTarget(GetPawn());
+		if (GetPawn())
+		{
+			SetViewTarget(GetPawn());
+		}
+		// Pawn 복제가 늦을 수 있으므로 0.5초 후 한 번 더 뷰 타깃 설정 (Add Another Client 검은 화면 방지)
+		if (GetWorld())
+		{
+			GetWorld()->GetTimerManager().SetTimer(
+				ClientViewTargetTimerHandle,
+				this,
+				&AWWPlayerController::EnsureClientViewTarget,
+				0.5f,
+				false
+			);
+		}
 	}
 }
 
@@ -175,45 +198,62 @@ void AWWPlayerController::ChangePlayerPawn(int32 Index)
 	if (CurrentPlayerPawnIndex == Index)
 		return;
 
-	if (!CurrentParty.IsValidIndex(Index) ||
-		!CurrentParty[Index])
-		return;
-
-	AWWRoleBase* NewPlayerPawn = CurrentParty[Index];
-	AWWRoleBase* OldPlayerPawn = Cast<AWWRoleBase>(GetPawn());
-
-	FRotator PrevRot = GetControlRotation();
-
-	CurrentPlayerPawnIndex = Index;
-	if (auto SaveDataSubsystem = GetGameInstance()->GetSubsystem<UWWSaveDataSubsystem>())
+	// 멀티플레이어: 서버에서만 실제 전환. 클라이언트는 RPC로 요청
+	if (HasAuthority())
 	{
-		SaveDataSubsystem->GetCharacterSaveGame()->CurrentPartyIndex = Index;
+		if (!CurrentParty.IsValidIndex(Index) || !CurrentParty[Index])
+			return;
+
+		AWWRoleBase* NewPlayerPawn = CurrentParty[Index];
+		AWWRoleBase* OldPlayerPawn = Cast<AWWRoleBase>(GetPawn());
+		if (!OldPlayerPawn || !NewPlayerPawn)
+			return;
+
+		FRotator PrevRot = GetControlRotation();
+		CurrentPlayerPawnIndex = Index;
+		if (auto SaveDataSubsystem = GetGameInstance()->GetSubsystem<UWWSaveDataSubsystem>())
+		{
+			SaveDataSubsystem->GetCharacterSaveGame()->CurrentPartyIndex = Index;
+		}
+		Possess(NewPlayerPawn);
+		SetControlRotation(PrevRot);
+		OldPlayerPawn->OffField();
+		NewPlayerPawn->OnField();
+		NewPlayerPawn->CopyState(OldPlayerPawn);
 	}
-	Possess(NewPlayerPawn);
+	else
+	{
+		ServerChangePartyIndex(Index);
+	}
+}
 
-	SetControlRotation(PrevRot);
+void AWWPlayerController::ServerChangePartyIndex_Implementation(int32 Index)
+{
+	ChangePlayerPawn(Index);
+}
 
-	OldPlayerPawn->OffField();
-	NewPlayerPawn->OnField();
-
-	NewPlayerPawn->CopyState(OldPlayerPawn);
+AWWRoleBase* AWWPlayerController::GetControlledRole() const
+{
+	if (HasAuthority() && CurrentParty.IsValidIndex(CurrentPlayerPawnIndex))
+	{
+		return CurrentParty[CurrentPlayerPawnIndex];
+	}
+	return Cast<AWWRoleBase>(GetPawn());
 }
 
 void AWWPlayerController::OnNormalMoveActionStarted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->NormalMoveStart();
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->NormalMoveStart();
 	bMoveTriggerdThisFrame = true;
 }
 
 void AWWPlayerController::OnNormalMoveActionTriggered(const FInputActionValue& Value)
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->NormalMove(Value);
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->NormalMove(Value);
 }
 
 void AWWPlayerController::OnNormalMoveActionCompleted()
@@ -231,59 +271,51 @@ void AWWPlayerController::OnNormalLookActionTriggered(const FInputActionValue& V
 
 void AWWPlayerController::OnJumpActionStarted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->Jump();
-
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->Jump();
 }
 
 void AWWPlayerController::OnJumpActionCompleted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->StopJumping();
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->StopJumping();
 }
 
 void AWWPlayerController::OnDashActionStarted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->Dash();
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->Dash();
 }
 
 void AWWPlayerController::OnNormalAttackActionStarted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->NormalAttack();
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->NormalAttack();
 }
 
 void AWWPlayerController::OnSpecialAttackActionStarted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->SpecialAttack();
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->SpecialAttack();
 }
 
 void AWWPlayerController::OnEcoAttackActionStarted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->EcoAttack();
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->EcoAttack();
 }
 
 void AWWPlayerController::OnUltimateAttackActionStarted()
 {
-	if (!CurrentParty[CurrentPlayerPawnIndex])
-		return;
-
-	CurrentParty[CurrentPlayerPawnIndex]->UltimateAttack();
+	AWWRoleBase* ControlledRole = GetControlledRole();
+	if (!ControlledRole) return;
+	ControlledRole->UltimateAttack();
 }
 
 void AWWPlayerController::OnChangePlayerPawnAction1Started()
