@@ -79,23 +79,26 @@ void AWWPlayerController::BeginPlay()
 		InitPlayerPawn(CharacterSaveGame->CurrentPartyIndex);
 	}
 
-	/* Mapping Context - 모든 클라이언트에서 설정 */
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	if (Subsystem && GameMappingContext)
-	{
-		Subsystem->AddMappingContext(GameMappingContext, 0);
-	}
-
-	/* Menu Widget - 모든 클라이언트에서 생성 */
-	if (MenuWidgetClass)
-	{
-		MenuWidget = CreateWidget<UWWMenuWidget>(this, MenuWidgetClass);
-		MenuWidget->AddToViewport();
-		MenuWidget->SetVisibility(ESlateVisibility::Hidden);
-	}
-
 	if (IsLocalController())
 	{
+		/* Mapping Context - 로컬 클라이언트에서만 설정 */
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+		if (Subsystem && GameMappingContext)
+		{
+			Subsystem->AddMappingContext(GameMappingContext, 0);
+		}
+
+		/* Menu Widget - 로컬 클라이언트에서만 생성 */
+		if (MenuWidgetClass)
+		{
+			MenuWidget = CreateWidget<UWWMenuWidget>(this, MenuWidgetClass);
+			if (MenuWidget)
+			{
+				MenuWidget->AddToViewport();
+				MenuWidget->SetVisibility(ESlateVisibility::Hidden);
+			}
+		}
+
 		if (GetPawn())
 		{
 			SetViewTarget(GetPawn());
@@ -159,10 +162,12 @@ void AWWPlayerController::InitPlayerPawn(int32 Index)
 
 	SetControlRotation(PrevRot);
 
-	OldPlayerPawn->Destroy();
+	if (OldPlayerPawn)
+	{
+		OldPlayerPawn->Destroy();
+		NewPlayerPawn->CopyState(OldPlayerPawn);
+	}
 	NewPlayerPawn->SetActive(true);
-
-	NewPlayerPawn->CopyState(OldPlayerPawn);
 }
 
 void AWWPlayerController::CreatePlayerPawn(int32 RoleID, int32 PartyIndex)
@@ -188,7 +193,11 @@ void AWWPlayerController::CreatePlayerPawn(int32 RoleID, int32 PartyIndex)
 	SpawnParams.Owner = this; // PlayerController를 Owner로 설정
 
 	CurrentParty[PartyIndex] = GetWorld()->SpawnActor<AWWRoleBase>(RoleAssetData->RoleClass, FTransform(FVector(0.f,0.f,-10000.f)), SpawnParams);
-	check(CurrentParty[PartyIndex]);
+	if (!CurrentParty[PartyIndex])
+	{
+		UE_LOG(LogWWPlayerController, Error, TEXT("Failed to spawn AWWRoleBase for RoleID %d"), RoleID);
+		return;
+	}
 
 	CurrentParty[PartyIndex]->SetActive(false);
 }

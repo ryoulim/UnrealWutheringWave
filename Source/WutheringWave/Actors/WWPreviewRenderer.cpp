@@ -57,8 +57,11 @@ void AWWPreviewRenderer::SetPreviewRole(AActor* InActor)
 	SceneCapture->ShowOnlyActors.Add(InActor);
 	CapturedRole = InActor;
 
-	// Actor 설정 후 즉시 캡쳐 시도
-	// 하지만 애니메이션이 준비되지 않았을 수 있으므로 다음 프레임에도 캡쳐됨 (Tick에서)
+	if (USkeletalMeshComponent* MeshComp = InActor->FindComponentByClass<USkeletalMeshComponent>())
+	{
+		// 메인 카메라에 보이지 않더라도 항상 애니메이션 연산을 하도록 강제 (SceneCapture 갱신 목적)
+		MeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	}
 }
 
 void AWWPreviewRenderer::CreateRenderTarget()

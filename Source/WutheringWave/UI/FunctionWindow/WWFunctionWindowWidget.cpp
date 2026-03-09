@@ -13,21 +13,34 @@ void UWWFunctionWindowWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	auto SubSystem = GetGameInstance()->GetSubsystem<UWWSaveDataSubsystem>();
+	auto GameInstance = GetGameInstance();
+	if (!GameInstance) return;
+
+	auto SubSystem = GameInstance->GetSubsystem<UWWSaveDataSubsystem>();
 
 	if (SubSystem)
 	{
-		auto AcountInformation = SubSystem->GetAccountSaveGame()->GetAccountInformation();
+		auto AccountSaveGame = SubSystem->GetAccountSaveGame();
+		if (!AccountSaveGame) return;
+
+		auto AcountInformation = AccountSaveGame->GetAccountInformation();
 
 		if(AcountInformation)
 		{
-			NameTextBox->SetText(FText::FromString(AcountInformation->Name));
-			UIDTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("UID:{0}")), AcountInformation->UID));
-			BirthDayTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("{0}월 {1}일")), AcountInformation->BirthDay.X, AcountInformation->BirthDay.Y));
-			RankTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("Rank.{0}")), AcountInformation->Rank));
-			LevelTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("Lv:{0}")), AcountInformation->Level));
-			ExpTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("{0}/{1}")), AcountInformation->Exp, 12800));
-			UserWordTextBox->SetText(FText::FromString(AcountInformation->UserWord));
+			if (NameTextBox)
+				NameTextBox->SetText(FText::FromString(AcountInformation->Name));
+			if (UIDTextBox)
+				UIDTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("UID:{0}")), AcountInformation->UID));
+			if (BirthDayTextBox)
+				BirthDayTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("{0}월 {1}일")), AcountInformation->BirthDay.X, AcountInformation->BirthDay.Y));
+			if (RankTextBox)
+				RankTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("Rank.{0}")), AcountInformation->Rank));
+			if (LevelTextBox)
+				LevelTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("Lv:{0}")), AcountInformation->Level));
+			if (ExpTextBox)
+				ExpTextBox->SetText(FText::Format(FTextFormat::FromString(TEXT("{0}/{1}")), AcountInformation->Exp, 12800));
+			if (UserWordTextBox)
+				UserWordTextBox->SetText(FText::FromString(AcountInformation->UserWord));
 		}
 	}
 }

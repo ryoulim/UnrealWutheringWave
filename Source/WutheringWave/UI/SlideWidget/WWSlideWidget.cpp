@@ -49,25 +49,37 @@ FReply UWWSlideWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const 
 	return FReply::Unhandled();
 }
 
-void UWWSlideWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
+void UWWSlideWidget::NativeConstruct()
 {
-	Super::NativeTick(MyGeometry, DeltaTime);
+	Super::NativeConstruct();
+	bIsActiveTimerRegistered = false;
+}
 
+EActiveTimerReturnType UWWSlideWidget::HandleActiveTimer(double InCurrentTime, float InDeltaTime)
+{
 	if (bIsStopping && !bIsDragging)
 	{
 		switch (DragEndAction)
 		{
 		case ESlideWidgetDragEndActionType::Intertia:
-			UpdateInertia(DeltaTime);
+			UpdateInertia(InDeltaTime);
 			break;
 		case ESlideWidgetDragEndActionType::Snapping:
-			UpdateSnapping(DeltaTime);
+			UpdateSnapping(InDeltaTime);
 			break;
 		default:
 			bIsStopping = false;
 			break;
 		}
 	}
+
+	if (!bIsStopping)
+	{
+		bIsActiveTimerRegistered = false;
+		return EActiveTimerReturnType::Stop;
+	}
+
+	return EActiveTimerReturnType::Continue;
 }
 
 void UWWSlideWidget::NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent)
@@ -87,6 +99,12 @@ void UWWSlideWidget::ForceEndDrag()
 
 	bIsDragging = false;
 	bIsStopping = true;
+
+	if (!bIsActiveTimerRegistered)
+	{
+		bIsActiveTimerRegistered = true;
+		RegisterActiveTimer(0.f, FWidgetActiveTimerDelegate::CreateUObject(this, &UWWSlideWidget::HandleActiveTimer));
+	}
 
 	// 마우스 캡처 해제
 	if (HasMouseCapture())
@@ -144,6 +162,12 @@ void UWWSlideWidget::DragEndEvent(const FPointerEvent& InMouseEvent)
 {
 	bIsDragging = false;
 	bIsStopping = true;
+
+	if (!bIsActiveTimerRegistered)
+	{
+		bIsActiveTimerRegistered = true;
+		RegisterActiveTimer(0.f, FWidgetActiveTimerDelegate::CreateUObject(this, &UWWSlideWidget::HandleActiveTimer));
+	}
 }
 
 void UWWSlideWidget::MoveContent(const FVector2D& MoveDelta)

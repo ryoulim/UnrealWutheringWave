@@ -44,24 +44,39 @@ public:
 	/* Action */
 public:
 	void NormalMoveStart();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerNormalMoveStart();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastNormalMoveStart();
 	void NormalMove(const FInputActionValue& Value);
 	void Dash();
 
 	// 멀티플레이어를 위한 Server RPC
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerNormalAttack();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastNormalAttack();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSpecialAttack();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSpecialAttack();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerEcoAttack();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEcoAttack();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerUltimateAttack();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastUltimateAttack();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerDash();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastDash();
 
 	// 클라이언트에서 호출하는 함수들 (서버 RPC로 전송)
 	void NormalAttack();
