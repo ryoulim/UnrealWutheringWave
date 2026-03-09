@@ -118,9 +118,13 @@ void AWWRoleBase::SetSpeedSprint()
 
 void AWWRoleBase::NormalMoveStart()
 {
-	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+	if (HasAuthority())
 	{
-		AnimInstatnce->OnMoveCall();
+		MulticastNormalMoveStart();
+	}
+	else
+	{
+		ServerNormalMoveStart();
 	}
 }
 
@@ -140,32 +144,21 @@ void AWWRoleBase::NormalMove(const FInputActionValue& Value)
 
 void AWWRoleBase::Dash()
 {
-	// 멀티플레이어: 서버에서만 실행되도록 RPC 호출
 	if (HasAuthority())
 	{
-		// 서버에서 직접 실행
-		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
-		{
-			AnimInstatnce->OnDashCall();
-		}
+		MulticastDash();
 	}
 	else
 	{
-		// 클라이언트는 서버에 RPC 전송
 		ServerDash();
 	}
 }
 
 void AWWRoleBase::NormalAttack()
 {
-	// 멀티플레이어: 클라이언트에서 서버로 RPC 전송
 	if (HasAuthority())
 	{
-		// 서버에서 직접 실행
-		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
-		{
-			AnimInstatnce->OnNormalAttackCallCall();
-		}
+		MulticastNormalAttack();
 	}
 	else
 	{
@@ -177,10 +170,7 @@ void AWWRoleBase::SpecialAttack()
 {
 	if (HasAuthority())
 	{
-		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
-		{
-			AnimInstatnce->OnSpecialAttackCall();
-		}
+		MulticastSpecialAttack();
 	}
 	else
 	{
@@ -192,10 +182,7 @@ void AWWRoleBase::EcoAttack()
 {
 	if (HasAuthority())
 	{
-		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
-		{
-			AnimInstatnce->OnEcoAttackCall();
-		}
+		MulticastEcoAttack();
 	}
 	else
 	{
@@ -207,10 +194,7 @@ void AWWRoleBase::UltimateAttack()
 {
 	if (HasAuthority())
 	{
-		if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
-		{
-			AnimInstatnce->OnUltimateAttackCall();
-		}
+		MulticastUltimateAttack();
 	}
 	else
 	{
@@ -221,10 +205,7 @@ void AWWRoleBase::UltimateAttack()
 // Server RPC 구현
 void AWWRoleBase::ServerDash_Implementation()
 {
-	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
-	{
-		AnimInstatnce->OnDashCall();
-	}
+	MulticastDash();
 }
 
 bool AWWRoleBase::ServerDash_Validate()
@@ -232,12 +213,17 @@ bool AWWRoleBase::ServerDash_Validate()
 	return true;
 }
 
-void AWWRoleBase::ServerNormalAttack_Implementation()
+void AWWRoleBase::MulticastDash_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
-		AnimInstatnce->OnNormalAttackCallCall();
+		AnimInstatnce->OnDashCall();
 	}
+}
+
+void AWWRoleBase::ServerNormalAttack_Implementation()
+{
+	MulticastNormalAttack();
 }
 
 bool AWWRoleBase::ServerNormalAttack_Validate()
@@ -245,12 +231,17 @@ bool AWWRoleBase::ServerNormalAttack_Validate()
 	return true;
 }
 
-void AWWRoleBase::ServerSpecialAttack_Implementation()
+void AWWRoleBase::MulticastNormalAttack_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
-		AnimInstatnce->OnSpecialAttackCall();
+		AnimInstatnce->OnNormalAttackCallCall();
 	}
+}
+
+void AWWRoleBase::ServerSpecialAttack_Implementation()
+{
+	MulticastSpecialAttack();
 }
 
 bool AWWRoleBase::ServerSpecialAttack_Validate()
@@ -258,12 +249,17 @@ bool AWWRoleBase::ServerSpecialAttack_Validate()
 	return true;
 }
 
-void AWWRoleBase::ServerEcoAttack_Implementation()
+void AWWRoleBase::MulticastSpecialAttack_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
-		AnimInstatnce->OnEcoAttackCall();
+		AnimInstatnce->OnSpecialAttackCall();
 	}
+}
+
+void AWWRoleBase::ServerEcoAttack_Implementation()
+{
+	MulticastEcoAttack();
 }
 
 bool AWWRoleBase::ServerEcoAttack_Validate()
@@ -271,7 +267,25 @@ bool AWWRoleBase::ServerEcoAttack_Validate()
 	return true;
 }
 
+void AWWRoleBase::MulticastEcoAttack_Implementation()
+{
+	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+	{
+		AnimInstatnce->OnEcoAttackCall();
+	}
+}
+
 void AWWRoleBase::ServerUltimateAttack_Implementation()
+{
+	MulticastUltimateAttack();
+}
+
+bool AWWRoleBase::ServerUltimateAttack_Validate()
+{
+	return true;
+}
+
+void AWWRoleBase::MulticastUltimateAttack_Implementation()
 {
 	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
 	{
@@ -279,9 +293,22 @@ void AWWRoleBase::ServerUltimateAttack_Implementation()
 	}
 }
 
-bool AWWRoleBase::ServerUltimateAttack_Validate()
+void AWWRoleBase::ServerNormalMoveStart_Implementation()
+{
+	MulticastNormalMoveStart();
+}
+
+bool AWWRoleBase::ServerNormalMoveStart_Validate()
 {
 	return true;
+}
+
+void AWWRoleBase::MulticastNormalMoveStart_Implementation()
+{
+	if (UWWRoleBaseAnimInstance* AnimInstatnce = Cast<UWWRoleBaseAnimInstance>(GetMesh()->GetAnimInstance()))
+	{
+		AnimInstatnce->OnMoveCall();
+	}
 }
 
 void AWWRoleBase::SetUIMode(bool bInMode)

@@ -103,7 +103,10 @@ void UWWSlideWidget::ForceEndDrag()
 	if (!bIsActiveTimerRegistered)
 	{
 		bIsActiveTimerRegistered = true;
-		RegisterActiveTimer(0.f, FWidgetActiveTimerDelegate::CreateUObject(this, &UWWSlideWidget::HandleActiveTimer));
+		if (TSharedPtr<SWidget> SharedWidget = GetCachedWidget())
+		{
+			SharedWidget->RegisterActiveTimer(0.f, FWidgetActiveTimerDelegate::CreateUObject(this, &UWWSlideWidget::HandleActiveTimer));
+		}
 	}
 
 	// 마우스 캡처 해제
@@ -166,7 +169,10 @@ void UWWSlideWidget::DragEndEvent(const FPointerEvent& InMouseEvent)
 	if (!bIsActiveTimerRegistered)
 	{
 		bIsActiveTimerRegistered = true;
-		RegisterActiveTimer(0.f, FWidgetActiveTimerDelegate::CreateUObject(this, &UWWSlideWidget::HandleActiveTimer));
+		if (TSharedPtr<SWidget> SharedWidget = GetCachedWidget())
+		{
+			SharedWidget->RegisterActiveTimer(0.f, FWidgetActiveTimerDelegate::CreateUObject(this, &UWWSlideWidget::HandleActiveTimer));
+		}
 	}
 }
 

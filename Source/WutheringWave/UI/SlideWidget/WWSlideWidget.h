@@ -29,7 +29,8 @@ protected:
 
     virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
     virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+    virtual void NativeConstruct() override;
+    EActiveTimerReturnType HandleActiveTimer(double InCurrentTime, float InDeltaTime);
 
     virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& CaptureLostEvent) override;
 
@@ -70,6 +71,7 @@ protected:
 
     bool bIsDragging{};
     bool bIsStopping{};
+    bool bIsActiveTimerRegistered{};
     FVector2D DragVelocity{};
     FVector2D LastPointerPos{};
 
